@@ -1,4 +1,13 @@
+====================
+ Description:
+====================
+
+A prototype application to demonstrate use of GridFS for binary content storage. The prototype app provides implementation for Create, Get and List operations using PostgreSQL, Oracle and GridFS.
+
+
+====================
  Running App:
+====================
 
 mvn clean jetty:run
 
