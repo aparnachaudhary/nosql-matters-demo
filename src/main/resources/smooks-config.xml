@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<smooks-resource-list xmlns="http://www.milyn.org/xsd/smooks-1.1.xsd" xmlns:jb="http://www.milyn.org/xsd/smooks/javabean-1.2.xsd">
+ 
+
+    <!--
+    Create an "net.arunoday.demo.domain.HealthRecord" bean instance when we visit the start of the <HealthRecord> element.
+    Assign the new bean instance to the beanId of "HealthRecord".
+    Wire in the "patient" bean.
+    -->
+    
+    <jb:bean beanId="HealthRecord" class="net.arunoday.demo.domain.HealthRecord" createOnElement="HealthRecord">
+        <jb:wiring property="patient" beanIdRef="patient" />
+    </jb:bean>
+
+    <jb:bean beanId="patient" class="net.arunoday.demo.domain.Patient" createOnElement="patient">
+    	<jb:value property="id" decoder="Long" data="HealthRecord/patient/id" />
+        <jb:value property="firstname" decoder="String" data="HealthRecord/patient/firstname" />
+        <jb:value property="lastname" decoder="String" data="HealthRecord/patient/lastname" />
+        <jb:value property="maritialStatus" decoder="String" data="HealthRecord/patient/maritialStatus" />
+        <jb:wiring property="birthPlace" beanIdRef="address" />
+    </jb:bean>
+ 
+    <jb:bean beanId="address" class="net.arunoday.demo.domain.Address" createOnElement="birthPlace">
+    	<jb:value property="streetAddress" decoder="String" data="HealthRecord/patient/birthPlace/streetAddress" />
+        <jb:value property="city" decoder="String" data="HealthRecord/patient/birthPlace/city" />
+        <jb:value property="stateOrProvince" decoder="String" data="HealthRecord/patient/birthPlace/stateOrProvince" />
+        <jb:value property="zip" decoder="String" data="HealthRecord/patient/birthPlace/zip" />
+        <jb:value property="country" decoder="String" data="HealthRecord/patient/birthPlace/country" />
+    </jb:bean>
+ </smooks-resource-list>

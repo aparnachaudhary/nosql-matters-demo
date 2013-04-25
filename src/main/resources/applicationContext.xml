@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<context:component-scan base-package="net.arunoday.demo" />
+
+
+	<!-- =============================================== -->
+	<!-- MONGODB SETUP -->
+	<!-- =============================================== -->
+
+	<!-- MongoDB configuration -->
+	<context:property-placeholder location="classpath:mongo.properties" />
+	
+	<mongo:mongo id="singleNodeMongo" host="${mongo.host}" port="${mongo.port}">
+		<mongo:options connections-per-host="${mongo.connectionsPerHost}"
+					threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
+					connect-timeout="${mongo.connectTimeout}" max-wait-time="${mongo.maxWaitTime}"
+					auto-connect-retry="${mongo.autoConnectRetry}" socket-keep-alive="${mongo.socketKeepAlive}"
+					socket-timeout="${mongo.socketTimeout}" write-number="1"
+					write-timeout="0" write-fsync="false"/>
+	</mongo:mongo> 
+
+	<!-- Factory bean that creates the Mongo instance -->
+	<mongo:db-factory id="mongoDbFactory" dbname="${mongo.database}" mongo-ref="singleNodeMongo" />
+	 
+	<mongo:mapping-converter id="converter" db-factory-ref="mongoDbFactory" />
+
+	<!-- =============================================== -->
+	<!-- JDBC CONFIG -->
+	<!-- =============================================== -->
+
+	<bean id="nativeJdbcExtractor"
+		class="org.springframework.jdbc.support.nativejdbc.CommonsDbcpNativeJdbcExtractor" />
+
+
+	<!-- =============================================== -->
+	<!-- POSTGRESQL CONFIG -->
+	<!-- =============================================== -->
+
+	<bean id="postgresTxManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="postgresDataSource" />
+	</bean>
+
+	<tx:annotation-driven transaction-manager="postgresTxManager"/>
+
+	<bean id="postgresDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="org.postgresql.Driver" />
+		<property name="url" value="jdbc:postgresql://localhost:5433/postgres" />
+		<property name="username" value="postgres" />
+		<property name="password" value="postgres" />
+	</bean>
+
+	<bean id="postgresLobHandler" class="net.arunoday.demo.service.impl.jdbc.PostgresLobHandler">
+		<property name="nativeJdbcExtractor" ref="nativeJdbcExtractor" />
+	</bean>
+
+	<bean id="postgresJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="postgresDataSource" />
+	</bean>
+
+	<bean id="postgresStorageService"
+		class="net.arunoday.demo.service.impl.jdbc.PostgresStorageService">
+		<property name="dataSource" ref="postgresDataSource" />
+		<property name="jdbcTemplate" ref="postgresJdbcTemplate" />
+	</bean>
+
+	<bean id="healthRecordIncrementer"
+		class="org.springframework.jdbc.support.incrementer.PostgreSQLSequenceMaxValueIncrementer">
+		<property name="dataSource" ref="postgresDataSource" />
+		<property name="incrementerName" value="health_record_seq" />
+	</bean>
+	
+	<bean id="healthRecordDataIncrementer"
+		class="org.springframework.jdbc.support.incrementer.PostgreSQLSequenceMaxValueIncrementer">
+		<property name="dataSource" ref="postgresDataSource" />
+		<property name="incrementerName" value="health_record_data_seq" />
+	</bean>
+	
+	<!-- =============================================== -->
+	<!-- ORACLE CONFIG -->
+	<!-- =============================================== -->
+
+	<bean id="oracleDataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="oracle.jdbc.driver.OracleDriver" />
+		<property name="url" value="jdbc:oracle:thin:@localhost:1521:DEMO" />
+		<property name="username" value="test" />
+		<property name="password" value="test" />
+	</bean>
+
+	<bean id="oracleLobHandler" class="org.springframework.jdbc.support.lob.OracleLobHandler">
+		<property name="nativeJdbcExtractor" ref="nativeJdbcExtractor" />
+	</bean>
+
+	<bean id="oracleJdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="oracleDataSource" />
+	</bean>
+
+	<bean id="oracleHealthRecordIncrementer"
+		class="org.springframework.jdbc.support.incrementer.OracleSequenceMaxValueIncrementer">
+		<property name="dataSource" ref="oracleDataSource" />
+		<property name="incrementerName" value="health_record_seq" />
+	</bean>
+	
+	<bean id="oracleHealthRecordDataIncrementer"
+		class="org.springframework.jdbc.support.incrementer.OracleSequenceMaxValueIncrementer">
+		<property name="dataSource" ref="oracleDataSource" />
+		<property name="incrementerName" value="health_record_data_seq" />
+	</bean>
+
+	<bean id="oracleStorageService"
+		class="net.arunoday.demo.service.impl.jdbc.OracleStorageService">
+		<property name="dataSource" ref="oracleDataSource" />
+		<property name="jdbcTemplate" ref="oracleJdbcTemplate" />
+	</bean>
+
+	<!-- =============================================== -->
+	<!-- SMOOKS CONFIG -->
+	<!-- =============================================== -->
+	
+	<!-- <bean id="smooks" class="org.milyn.Smooks"> <constructor-arg value="smooks-config.xml"/> 
+		</bean> -->
+
+
+</beans>
